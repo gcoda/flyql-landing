@@ -5,7 +5,6 @@ module.exports = {
   },
   extends: ['plugin:vue/essential', 'eslint:recommended'],
   rules: {
-    quotes: ['error', 'single'],
     'no-console':
       process.env.NODE_ENV === 'production' ? 'error' : 'off',
     'no-debugger':
@@ -14,4 +13,7 @@ module.exports = {
   parserOptions: {
     parser: 'babel-eslint',
   },
+  plugins: [
+    'graphql'
+  ]
 }
