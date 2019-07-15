@@ -1,0 +1,3 @@
+query argsTest($input: JSON){
+  argsTest(input: $input)
+}

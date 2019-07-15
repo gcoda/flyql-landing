@@ -1,0 +1,96 @@
+input PageListResolver
+  @fetch(
+    url: "${env.storageApi}o?prefix=api-landing/pages/${args.lang}"
+    response: JSON
+  )
+  @resolve(
+    template: {
+      _map: [
+        {
+          _filter: [
+            { _: [res, body, items] }
+            {
+              _eq: [
+                { _: contentType }
+                "text/markdown; charset=utf-8"
+              ]
+            }
+          ]
+        }
+        {
+          id: { _: name }
+          url: { _add: [{ _: [env, stroageUrl] }, { _: name }] }
+        }
+      ]
+    }
+  ) {
+  lang: Expression
+}
+
+input PageByUrl
+  @fetch(url: "${args.url}#", response: MARKDOWN_AST)
+  @resolve(
+    template: {
+      args: { _: args }
+      res: { _: [res, body] }
+      # some: "stuff"
+    }
+  ) {
+  url: Expression!
+}
+
+input PageById
+  @fetch(url: "${env.stroageUrl}${args.id}", response: MARKDOWN_AST)
+  @resolve(
+    template: {
+      id: { _: [args, id] }
+      data: { _: [res, body, data] }
+      title: {
+        _or: [
+          { _: [res, body, data, title] }
+          {
+            _with: [
+              {
+                _find: [
+                  { _: [res, body, content] }
+                  { _eq: [{ _: type }, heading] }
+                ]
+              }
+              { _: [children, 0, value] }
+            ]
+          }
+        ]
+      }
+      blocks: { _: [res, body, content] }
+      excerpt: { _: [res, body, excerpt] }
+    }
+  ) {
+  id: Expression!
+}
+
+scalar ID
+
+type Page {
+  id: ID
+  title: String
+  data: JSON
+  blocks: [JSON]
+}
+
+type AllPagesConnection {
+  nodes: [Page]
+    @PageById(id: { _: [root, id] })
+    @ListResolver(args: { _: root })
+}
+
+type Query {
+  pageById(id: ID): Page @PageById(id: { _: [args, id] })
+  some(lang: String = "en"): JSON @resolve(template: { _: [env] })
+  pages(lang: String = "en"): AllPagesConnection
+    @PageListResolver(lang: { _: [args, lang] })
+  argsTest(input: JSON): JSON @resolve(template: { _: [args] })
+  title(text: String): String
+    @resolve(
+      template: { _or: [{ _: [args, text] }, "Default Title"] }
+    )
+}

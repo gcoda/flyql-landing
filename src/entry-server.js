@@ -9,13 +9,13 @@ export default context => {
       router,
       apolloProvider
     } = await createApp()
-
     router.push(context.url)
-
     router.onReady(() => {
       context.rendered = () => {
-
-        // Same for Apollo client cache
+        const meta = app.$meta().inject()
+        Object.assign(context, meta)
+        context.htmlattrs = meta.htmlAttrs
+        context.bodyattrs = meta.bodyAttrs
         context.apolloState = ApolloSSR.getStates(apolloProvider)
       }
       resolve(app)
